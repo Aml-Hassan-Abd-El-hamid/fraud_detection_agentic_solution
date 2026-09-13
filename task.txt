@@ -1,0 +1,178 @@
+AI engineer - Assignment(1) @CIT Vericash
+Note 1
+We do not expect you to spend more than 5 hours on this test. If you find yourself taking longer, you are likely going too deep.
+We understand this may not be enough time to produce a perfect, production-ready solution. Please share what you would do differently with more time.
+Submit within 3-5 calendar days. You will walk through a max 5-slide / 10-minute deck in the debrief.
+Role
+Mid-level / Senior AI Engineer
+Stack preference(not mandatory)
+n8n (Cloud trial or self-hosted). Python (LangGraph, OpenAI Agents SDK, or plain tool-calling) is acceptable if you say why you skipped n8n.
+Instructions
+RiverPay is a fictional mobile-money wallet in Kambara (currency: KBR). It is not a real bank. All data in this pack is synthetic.
+The 24/7 operations center currently triages failed transfers, agent float alerts, KYC mismatches, and suspected fraud by hand. They want an exception agent: read an event, look up systems of record, apply written policy, then either auto-handle the safe cases or open a human case with a usable note.
+You are not being asked to move real money, train a model, or build a full case-management product.
+What you are building
+An agentic workflow that, for each event in events.json (attached):
+Reads the event.
+Looks up whatever it needs (customer, ledger, agent, sanctions, policy). Do not decide from the event payload alone — some events are stale or wrong.
+Emits one JSON object per event matching the output schema (attached / below).
+Writes all results to a single file: output/decisions.json.
+The workflow must use tools (n8n nodes, HTTP mocks, or functions). A single “send the whole CSV to ChatGPT” prompt is not the assignment.
+Decisions the agent may take
+Use only these decision values:
+decision
+Meaning
+AUTO_RESOLVE
+Safe to close with a customer notification. No money movement.
+AUTO_NOTIFY
+Notify people (agent / manager). Do not freeze anyone.
+AUTO_BLOCK
+Freeze wallet and open a compliance/fraud case. Be strict.
+ESCALATE_FRAUD_OPS
+Human fraud queue.
+ESCALATE_COMPLIANCE
+Human compliance / KYC queue.
+ESCALATE_TECH_OPS
+Human tech queue. Recommend retry if appropriate; never execute a retry.
+ESCALATE_RECONCILIATION
+Ledger and event disagree.
+ESCALATE_AGENT_NETWORK
+Agent network team.
+ESCALATE_DATA_QUALITY
+Missing or impossible identifiers.
+What we give you
+Download the attached files. Treat them as stand-ins for core banking APIs. Trust ledger.csv / customers.csv over the event if they disagree.
+File
+What it is
+events.json
+Inbound exception events (the work queue)
+customers.csv
+Customer master
+ledger.csv
+System of record for transfers
+agents.csv
+Agent float and territory
+sanctions.csv
+Internal watchlist
+ops_policy.md
+Binding rules R1–R13 (also on this page)
+output_schema.json
+Required output shape
+worked_examples.md
+Three scored examples
+Constraints
+Never auto-retry or auto-complete a debit. If a transfer might need a retry, escalate with a recommendation only.
+Never tell a customer a transfer succeeded unless ledger.csv status is SUCCESS.
+Never auto-approve KYC or clear a sanctions hit.
+Policy is short. Stuffing it into the prompt is fine. If you add a vector store, say why.
+Use any LLM you can pay for or run locally (Groq, Gemini Flash, OpenAI mini, Anthropic, Ollama). A few dollars at most.
+You may use Cursor / Copilot. Disclose it in the README in one sentence.
+Do not use real customer data. Do not call any real bank API.
+Suggested 5-hour split
+Time
+Do this
+0:00–0:25
+Read policy + 3 worked examples. Skim events. Sketch tools.
+0:25–3:15
+Build the workflow. Get structured output for all events.
+3:15–4:15
+Spot-check traps (stale insufficient-funds, fake duplicates, sanctions, TIMEOUT).
+4:15–5:00
+README + 6–8 slides. Stop.
+If you are not done at 5 hours, submit anyway. A senior submission with known gaps beats an unfinished cathedral.
+Deliverables
+Runnable system — n8n exported workflow JSON + import notes, or code with ≤10 setup commands.
+output/decisions.json — one object per event, valid against the schema.
+README.md (1–2 pages): architecture, tools, what you did not do, AI assistance, cost/latency ballpark.
+Slide deck — see below (max 8 slides / 8 minutes).
+Optional: table of event_id → decision vs policy rule. Highest-leverage extra if you have 30 minutes left.
+Do not submit: fine-tuned models, a mobile app, Kubernetes, or a 20-page strategy doc.
+Stretch (not required)
+Confidence below 0.6 always escalates.
+Slack/email mock for AUTO_NOTIFY.
+A 10-line post-run report: counts by decision, list of AUTO_BLOCK ids.
+Slide deck (required)
+One deck. Maximum 8 slides. Maximum 8 minutes. Mixed audience: AI hiring manager, an engineer, and a business stakeholder.
+Problem and success metric (business) — Whose time or risk this removes, and 1–2 metrics you would watch in production.
+Architecture (technical) — Data in, tools, model, output, where a human sits. Label mocked vs real.
+Two design choices (technical) — What you picked, what you rejected, why. “I used GPT-4o” is not a design choice.
+Evidence (both) — Small table: what you evaluated, what passed, one failure you would not ship.
+Guardrails and residual risk (business) — What the system is forbidden to do. Who owns a miss.
+Cost, latency, next week (both) — Ballpark cost; the one thing you would do with 5 more days; what you still would not build.
+No “LLMs are transforming finance” slides. If a business person cannot repeat slides 1 and 5, the deck failed.
+How we evaluate
+We care about judgment under policy, not UI polish.
+Did you look up the ledger / customer, or trust the event?
+Did you refuse to move money and refuse to auto-clear KYC/sanctions?
+Are AUTO_BLOCK cases actually the dangerous ones?
+Can a human ops agent act from your internal_case_note without starting from zero?
+Did you measure anything, including a miss?
+A clean n8n graph that auto-retries TIMEOUTs will fail. A slightly ugly graph that escalates TIMEOUTs and catches the reconciliation trap will pass.
+References
+n8n AI + agents: https://docs.n8n.io/advanced-ai/
+Export/import: https://docs.n8n.io/workflows/export-import/
+Self-host: https://github.com/n8n-io/n8n
+Cheap inference: https://console.groq.com or Gemini Flash
+Questions about a broken file may go to the recruiter. “What should E007 decide?” will not be answered — that is the work.
+Binding policy, examples, and schema
+# Binding policy, examples, and schema
+
+- Ops policy (R1–R13) — binding
+    
+    If an event payload disagrees with `ledger.csv` or `customers.csv`, **the CSV is the system of record.** Money movement is irreversible enough. This policy is intentionally conservative.
+    
+    **Tiers — daily send limit:** KYC0 = 50 KBR, KYC1 = 2,000 KBR, KYC2 = 20,000 KBR.
+    
+    **R1 — Hard fraud block.** If `fraud_score >= 0.90` AND (`new_device` OR `new_beneficiary`) AND `amount_kbr >= 1000` → `AUTO_BLOCK`. Freeze wallet. Customer message: generic review, never “you are a fraudster.”
+    
+    **R2 — Fraud / high-value review.** If `fraud_score >= 0.70` OR `amount_kbr >= 5000` OR `cross_border` → `ESCALATE_FRAUD_OPS`. Do not AUTO_RESOLVE / AUTO_BLOCK unless R1 or R11 also fires (those win).
+    
+    **R3 — Duplicate of a completed transfer.** Suspected duplicate AND ledger shows `SUCCESS` for same payer, payee, and amount within **120 seconds before** the event → `AUTO_RESOLVE`. Do not retry. If payer/payee/amount do **not** match a recent SUCCESS, this is not a duplicate (usually R5).
+    
+    **R4 — Insufficient funds.** Look up `available_balance_kbr`. If balance `<` amount → `AUTO_RESOLVE` (notify, no retry). If balance `≥` amount → stale/wrong event → `ESCALATE_RECONCILIATION`.
+    
+    **R5 — Timeout / unknown.** `TIMEOUT` or `UNKNOWN`, amount `< 5000`, `fraud_score < 0.70` → `ESCALATE_TECH_OPS`. You may *recommend* a manual retry. **Never execute a retry. Never AUTO_RESOLVE as success.**
+    
+    **R6 — Beneficiary not found.** `AUTO_RESOLVE`. Notify sender that no funds moved.
+    
+    **R7 — Limit exceeded.** `AUTO_RESOLVE`. Quote the daily limit for **their actual KYC tier from the customer file**, not from the event.
+    
+    **R8 — Agent float.** Float `> 0` and below warning → `AUTO_NOTIFY` (agent + territory manager). Float `= 0` AND `pending_cashout_queue >= 5` → `ESCALATE_AGENT_NETWORK`.
+    
+    **R9 — KYC mismatch.** `ESCALATE_COMPLIANCE`. Never auto-approve identity.
+    
+    **R10 — PIN locked.** Amount `< 2000` → `AUTO_RESOLVE` (keep locked, send `*123*5#` / in-app reset). Amount `≥ 2000` → `ESCALATE_FRAUD_OPS`. Do not unlock.
+    
+    **R11 — Sanctions.** On `sanctions.csv` (customer_id or case-insensitive name) → `AUTO_BLOCK` with reason `R11`. Customer message: delay for review, **no mention of sanctions**.
+    
+    **R12 — Success claims.** Never state success unless ledger `status` is `SUCCESS`. Event says SUCCESS and ledger does not → `ESCALATE_RECONCILIATION`.
+    
+    **R13 — Data quality.** Required `customer_id` / `txn_id` missing or not found → `ESCALATE_DATA_QUALITY`.
+    
+    **Precedence (highest first):** R11, R1, R13, R12, R9, R2, R10, everything else. If unsure, **escalate**. Auto-retry of a debit is a fail.
+    
+    Customer messages: short, no jargon, no rule IDs, no “fraud score.” Internal notes: rule IDs, tool results, recommended next action.
+    
+- Worked examples (3)
+    
+    **A — true insufficient funds.** Payer `C004`, amount 80, `INSUFFICIENT_FUNDS`. Lookup: KYC0, balance 12. → `AUTO_RESOLVE`, `R4`, `requires_human` false. Do not retry.
+    
+    **B — TIMEOUT, small amount.** Amount 150, fraud 0.12, ledger `FAILED`. → `ESCALATE_TECH_OPS`, `R5`, `requires_human` true. Recommend manual check; do not auto-retry.
+    
+    **C — sanctions, ordinary-looking P2P.** Customer `C005`, amount 200, low fraud score. Lookup: on sanctions file. → `AUTO_BLOCK`, `R11`. Customer: “under review.” Do not say “sanctions” to the customer.
+    
+- Required output schema
+    
+    Each event must emit JSON with: `event_id`, `decision` (enum above), `reason_codes` (array, min 1), `customer_message`, `internal_case_note`, `tools_used` (from `lookup_customer`, `lookup_transaction`, `lookup_recent_transfers`, `lookup_agent`, `check_sanctions`, `get_policy`), `confidence` (0–1), `requires_human` (boolean).
+    
+    Full schema is attached as `output_schema.json`.
+Ops policy (R1–R13) — binding
+Worked examples (3)
+Required output schema
+Data pack
+Download every file in this section before you start. Files are attached below.
+ledger.csv
+agents.csv
+customers.csv
+sanctions.csv
+events.json

@@ -1,0 +1,4 @@
+agent_id,outlet_name,territory_manager,float_kbr,float_warning_kbr,pending_cashout_queue,city
+A001,Port Mbeka Market,TM-North,12000,500,1,Port Mbeka
+A002,Sahelton Junction,TM-Inland,80,500,2,Sahelton
+A003,Airport Kiosk,TM-North,0,500,9,Port Mbeka

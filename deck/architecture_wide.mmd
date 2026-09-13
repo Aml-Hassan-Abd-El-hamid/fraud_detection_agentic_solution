@@ -1,0 +1,24 @@
+%%{init: {"theme":"base", "themeVariables":{"fontSize":"20px"}, "flowchart":{"padding":12}}}%%
+flowchart TB
+  subgraph BUILD["Build (one-time)"]
+    direction LR
+    P["Policy<br/>task.txt"] -->|"Gemma 4 31B<br/>writes the code"| ENG["Engine<br/>policy.py"]
+    ENG --> T{"AST guard<br/>+ 19 tests"}
+    T -->|"fail"| BACK["Keep last good"]
+  end
+  subgraph RUN["Run (per event)"]
+    direction LR
+    EV["events.json"] --> GATH["Gather<br/>evidence"]
+    GATH --> SOR[("Records<br/>CSV")]
+    SOR --> DEC["Decide<br/>plain rules"]
+    DEC -->|"auto"| VAL["Safety<br/>check"]
+    VAL --> OUT["decisions.json"]
+    DEC -->|"escalate"| HUMAN["Human queue"]
+  end
+  T -->|"pass = active engine"| DEC
+  classDef mock fill:#fff3cd,stroke:#d39e00,color:#000;
+  classDef human fill:#e6ffed,stroke:#2f9e44,color:#000;
+  class SOR mock;
+  class HUMAN human;
+  style BUILD fill:none,stroke:#adb5bd,stroke-dasharray:4 3;
+  style RUN fill:none,stroke:#adb5bd,stroke-dasharray:4 3;

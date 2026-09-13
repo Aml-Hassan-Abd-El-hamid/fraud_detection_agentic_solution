@@ -1,0 +1,13 @@
+customer_id,full_name,kyc_tier,phone,wallet_status,available_balance_kbr,country
+C001,Ama Boateng,KYC2,+888201001,active,8500,Kambara
+C002,Kwame Mensah,KYC1,+888201002,active,400,Kambara
+C003,Fatima Diallo,KYC2,+888201003,active,12000,Kambara
+C004,Ibrahim Sow,KYC0,+888201004,active,12,Kambara
+C005,Elena Petrova,KYC2,+888201005,active,3000,Kambara
+C006,Youssef Haddad,KYC1,+888201006,pin_locked,900,Kambara
+C007,Ngozi Okeke,KYC2,+888201007,active,22000,Kambara
+C008,Jean-Baptiste Nkrumah,KYC1,+888201008,active,150,Kambara
+C009,Amina Traore,KYC2,+888201009,frozen,5000,Kambara
+C010,Daniel Osei,KYC2,+888201010,active,1800,Kambara
+C011,Sarah Bekele,KYC1,+888201011,active,2500,Kambara
+C012,Mohamed El-Sayed,KYC2,+888201012,active,700,Kambara

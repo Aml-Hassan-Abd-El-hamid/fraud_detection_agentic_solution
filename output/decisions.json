@@ -1,0 +1,337 @@
+[
+  {
+    "event_id": "E001",
+    "decision": "AUTO_RESOLVE",
+    "reason_codes": [
+      "R4"
+    ],
+    "customer_message": "You don't have enough balance for this transfer. No money left your wallet.",
+    "internal_case_note": "AUTO_RESOLVE (R4). event=E001 type=transfer_failed amount=80. customer=C004 tier=KYC0 balance=12 wallet=active. ledger=TXN-2001 status=FAILED C004->C001 80. next: close with customer notification; no money movement. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": false
+  },
+  {
+    "event_id": "E002",
+    "decision": "ESCALATE_RECONCILIATION",
+    "reason_codes": [
+      "R4"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_RECONCILIATION (R4). event=E002 type=transfer_failed amount=500. customer=C010 tier=KYC2 balance=1800 wallet=active. ledger=TXN-2002 status=FAILED C010->C007 500. next: ledger and event disagree; reconcile before any action. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E003",
+    "decision": "AUTO_RESOLVE",
+    "reason_codes": [
+      "R3"
+    ],
+    "customer_message": "We've reviewed your recent transaction. No money left your wallet.",
+    "internal_case_note": "AUTO_RESOLVE (R3). event=E003 type=duplicate_suspected amount=80. customer=C001 tier=KYC2 balance=8500 wallet=active. ledger=TXN-2004 status=FAILED C001->C002 80. next: close with customer notification; no money movement. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": false
+  },
+  {
+    "event_id": "E004",
+    "decision": "ESCALATE_TECH_OPS",
+    "reason_codes": [
+      "R5"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_TECH_OPS (R5). event=E004 type=duplicate_suspected amount=80. customer=C001 tier=KYC2 balance=8500 wallet=active. ledger=TXN-2005 status=FAILED C001->C003 80. next: route to tech ops; recommend manual retry \u2014 do NOT auto-retry. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E005",
+    "decision": "AUTO_BLOCK",
+    "reason_codes": [
+      "R1"
+    ],
+    "customer_message": "Your account is temporarily under review. We'll contact you shortly.",
+    "internal_case_note": "AUTO_BLOCK (R1). event=E005 type=transfer_failed amount=2500. customer=C007 tier=KYC2 balance=22000 wallet=active. ledger=TXN-2006 status=FAILED C007->C008 2500. next: wallet frozen; open compliance/fraud case. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E006",
+    "decision": "ESCALATE_FRAUD_OPS",
+    "reason_codes": [
+      "R2"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_FRAUD_OPS (R2). event=E006 type=transfer_failed amount=800. customer=C003 tier=KYC2 balance=12000 wallet=active. ledger=TXN-2007 status=FAILED C003->C011 800. next: route to fraud ops for review. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E007",
+    "decision": "ESCALATE_FRAUD_OPS",
+    "reason_codes": [
+      "R2"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_FRAUD_OPS (R2). event=E007 type=transfer_failed amount=8000. customer=C007 tier=KYC2 balance=22000 wallet=active. ledger=TXN-2008 status=FAILED C007->C001 8000. next: route to fraud ops for review. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E008",
+    "decision": "AUTO_RESOLVE",
+    "reason_codes": [
+      "R6"
+    ],
+    "customer_message": "We couldn't find that recipient, so no money left your wallet. Please check the details and try again.",
+    "internal_case_note": "AUTO_RESOLVE (R6). event=E008 type=transfer_failed amount=60. customer=C002 tier=KYC1 balance=400 wallet=active. ledger=TXN-2009 status=FAILED C002-> 60. next: close with customer notification; no money movement. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": false
+  },
+  {
+    "event_id": "E009",
+    "decision": "AUTO_RESOLVE",
+    "reason_codes": [
+      "R7"
+    ],
+    "customer_message": "This transfer is above your current daily limit of 50 KBR. No money left your wallet.",
+    "internal_case_note": "AUTO_RESOLVE (R7). event=E009 type=transfer_failed amount=200. customer=C004 tier=KYC0 balance=12 wallet=active. ledger=TXN-2010 status=FAILED C004->C002 200. next: close with customer notification; no money movement. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": false
+  },
+  {
+    "event_id": "E010",
+    "decision": "AUTO_NOTIFY",
+    "reason_codes": [
+      "R8"
+    ],
+    "customer_message": "N/A \u2014 agent notification, no customer contact.",
+    "internal_case_note": "AUTO_NOTIFY (R8). event=E010 type=agent_float_low amount=80. agent=A002 float=80 queue=2 mgr=TM-Inland. next: notify agent and territory manager. tools: get_policy, lookup_agent.",
+    "tools_used": [
+      "get_policy",
+      "lookup_agent"
+    ],
+    "confidence": 1.0,
+    "requires_human": false
+  },
+  {
+    "event_id": "E011",
+    "decision": "ESCALATE_AGENT_NETWORK",
+    "reason_codes": [
+      "R8"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_AGENT_NETWORK (R8). event=E011 type=agent_float_low amount=0. agent=A003 float=0 queue=9 mgr=TM-North. next: route to agent network team. tools: get_policy, lookup_agent.",
+    "tools_used": [
+      "get_policy",
+      "lookup_agent"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E012",
+    "decision": "ESCALATE_COMPLIANCE",
+    "reason_codes": [
+      "R9"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_COMPLIANCE (R9). event=E012 type=kyc_mismatch amount=0. customer=C008 tier=KYC1 balance=150 wallet=active. agent=A001 float=12000 queue=1 mgr=TM-North. next: route to compliance/KYC; do not auto-approve identity. tools: get_policy, lookup_customer, lookup_agent, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_agent",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E013",
+    "decision": "AUTO_RESOLVE",
+    "reason_codes": [
+      "R10"
+    ],
+    "customer_message": "For your security your PIN is locked. Reset it in-app or dial *123*5#.",
+    "internal_case_note": "AUTO_RESOLVE (R10). event=E013 type=pin_locked amount=400. customer=C006 tier=KYC1 balance=900 wallet=pin_locked. ledger=TXN-2012 status=FAILED C006->C001 400. next: close with customer notification; no money movement. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": false
+  },
+  {
+    "event_id": "E014",
+    "decision": "ESCALATE_FRAUD_OPS",
+    "reason_codes": [
+      "R10"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_FRAUD_OPS (R10). event=E014 type=pin_locked amount=3000. customer=C007 tier=KYC2 balance=22000 wallet=active. ledger=TXN-2013 status=FAILED C007->C002 3000. next: route to fraud ops for review. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E015",
+    "decision": "AUTO_BLOCK",
+    "reason_codes": [
+      "R11"
+    ],
+    "customer_message": "Your account is temporarily under review. We'll contact you shortly.",
+    "internal_case_note": "AUTO_BLOCK (R11). event=E015 type=transfer_failed amount=200. customer=C005 tier=KYC2 balance=3000 wallet=active. ledger=TXN-2015 status=FAILED C005->C001 200. SANCTIONS MATCH. next: wallet frozen; open compliance/fraud case. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E016",
+    "decision": "ESCALATE_TECH_OPS",
+    "reason_codes": [
+      "R5"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_TECH_OPS (R5). event=E016 type=transfer_failed amount=200. customer=C012 tier=KYC2 balance=700 wallet=active. ledger=TXN-2016 status=FAILED C012->C011 200. next: route to tech ops; recommend manual retry \u2014 do NOT auto-retry. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E017",
+    "decision": "ESCALATE_DATA_QUALITY",
+    "reason_codes": [
+      "R13"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_DATA_QUALITY (R13). event=E017 type=transfer_failed amount=75. customer=C002 tier=KYC1 balance=400 wallet=active. next: missing/invalid identifiers; fix data before processing. tools: get_policy, lookup_customer, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E018",
+    "decision": "ESCALATE_RECONCILIATION",
+    "reason_codes": [
+      "R12"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_RECONCILIATION (R12). event=E018 type=transfer_completed amount=90. customer=C001 tier=KYC2 balance=8500 wallet=active. ledger=TXN-2018 status=FAILED C001->C011 90. next: ledger and event disagree; reconcile before any action. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  },
+  {
+    "event_id": "E019",
+    "decision": "ESCALATE_FRAUD_OPS",
+    "reason_codes": [
+      "R2"
+    ],
+    "customer_message": "We're reviewing your recent transaction and will update you shortly.",
+    "internal_case_note": "ESCALATE_FRAUD_OPS (R2). event=E019 type=transfer_failed amount=400. customer=C003 tier=KYC2 balance=12000 wallet=active. ledger=TXN-2019 status=FAILED C003->C099 400. next: route to fraud ops for review. tools: get_policy, lookup_customer, lookup_transaction, lookup_recent_transfers, check_sanctions.",
+    "tools_used": [
+      "get_policy",
+      "lookup_customer",
+      "lookup_transaction",
+      "lookup_recent_transfers",
+      "check_sanctions"
+    ],
+    "confidence": 1.0,
+    "requires_human": true
+  }
+]

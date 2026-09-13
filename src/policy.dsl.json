@@ -1,0 +1,129 @@
+{
+  "constants": {
+    "KYC_LIMITS": {
+      "KYC0": 50,
+      "KYC1": 2000,
+      "KYC2": 20000
+    },
+    "DUP_WINDOW": 120,
+    "LOW_CONF": 0.6
+  },
+  "required": {
+    "transfer_failed": [
+      "customer_id",
+      "txn_id"
+    ],
+    "duplicate_suspected": [
+      "customer_id",
+      "txn_id"
+    ],
+    "transfer_completed": [
+      "customer_id",
+      "txn_id"
+    ],
+    "pin_locked": [
+      "customer_id",
+      "txn_id"
+    ],
+    "kyc_mismatch": [
+      "customer_id"
+    ],
+    "agent_float_low": [
+      "agent_id"
+    ]
+  },
+  "precedence": [
+    "R11",
+    "R1",
+    "R13",
+    "R12",
+    "R9",
+    "R2",
+    "R10",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8"
+  ],
+  "fallback": {
+    "decision": "ESCALATE_FRAUD_OPS",
+    "reason": "No matching policy rule; default escalation",
+    "confidence": 0.0
+  },
+  "rules": {
+    "R1": {
+      "fraud_min": 0.9,
+      "amount_min": 1000,
+      "decision": "AUTO_BLOCK",
+      "confidence": 1.0
+    },
+    "R2": {
+      "fraud_min": 0.7,
+      "amount_min": 5000,
+      "decision": "ESCALATE_FRAUD_OPS",
+      "confidence": 1.0
+    },
+    "R3": {
+      "decision": "AUTO_RESOLVE",
+      "confidence": 1.0
+    },
+    "R4": {
+      "failure": "INSUFFICIENT_FUNDS",
+      "lt": "AUTO_RESOLVE",
+      "ge": "ESCALATE_RECONCILIATION",
+      "confidence_lt": 1.0,
+      "confidence_ge": 1.0
+    },
+    "R5": {
+      "failures": [
+        "TIMEOUT",
+        "UNKNOWN"
+      ],
+      "amount_max": 5000,
+      "fraud_max": 0.7,
+      "decision": "ESCALATE_TECH_OPS",
+      "confidence": 1.0
+    },
+    "R6": {
+      "failure": "BENEFICIARY_NOT_FOUND",
+      "decision": "AUTO_RESOLVE",
+      "confidence": 1.0
+    },
+    "R7": {
+      "failure": "LIMIT_EXCEEDED",
+      "decision": "AUTO_RESOLVE",
+      "confidence": 1.0
+    },
+    "R8": {
+      "queue_min": 5,
+      "network": "ESCALATE_AGENT_NETWORK",
+      "notify": "AUTO_NOTIFY",
+      "confidence": 1.0
+    },
+    "R9": {
+      "event_type": "kyc_mismatch",
+      "decision": "ESCALATE_COMPLIANCE",
+      "confidence": 1.0
+    },
+    "R10": {
+      "amount_threshold": 2000,
+      "lt": "AUTO_RESOLVE",
+      "ge": "ESCALATE_FRAUD_OPS",
+      "confidence": 1.0
+    },
+    "R11": {
+      "decision": "AUTO_BLOCK",
+      "confidence": 1.0
+    },
+    "R12": {
+      "decision": "ESCALATE_RECONCILIATION",
+      "confidence": 1.0
+    },
+    "R13": {
+      "decision": "ESCALATE_DATA_QUALITY",
+      "confidence": 1.0
+    }
+  }
+}
