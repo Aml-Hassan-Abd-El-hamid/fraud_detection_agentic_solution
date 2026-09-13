@@ -64,9 +64,10 @@ messages are fixed templates instead of AI-written.
 The full picture. Build time adds a human approval and a saved history of every rulebook; run
 time adds an AI that writes the customer and staff messages.
 
-Two phases. **Build time**: an LLM compiles the written policy into a DSL/config + tests, which
-a human approves before it ships. **Runtime**: a fully deterministic path gathers evidence and
-decides; an LLM only writes the message prose at the end.
+Two phases. **Build time**: an LLM compiles the written policy into a DSL/config (and, optionally,
+the engine code directly) plus tests; an AST guard + tests gate it and a human approves before it
+ships. **Runtime**: a fully deterministic path gathers evidence and decides; an LLM only writes the
+message prose at the end.
 
 ```
                          ┌──────────────────────┐
@@ -79,6 +80,7 @@ decides; an LLM only writes the message prose at the end.
                          │   Policy Compiler    │  ◄── LLM (build time, offline)
                          │        LLM           │
                          │ NL Policy → DSL/config│
+                         │  → guarded engine code│
                          │ + generate test cases │
                          └──────────┬───────────┘
                                     ▼
@@ -88,6 +90,7 @@ decides; an LLM only writes the message prose at the end.
                          │ Edge cases            │
                          │ Precedence checks     │
                          │ Invariants (safety)   │
+                         │ AST guard (gen code)  │
                          └──────────┬───────────┘
                               PASS  │  FAIL
                     ┌───────────────┴────────────┐
@@ -99,7 +102,7 @@ decides; an LLM only writes the message prose at the end.
              │ Policy Store │
              │ Versioned    │
              └──────┬───────┘
-                    │ active policy (DSL/config: R1–R13, precedence, limits)
+                    │ active policy (DSL/config or guarded engine code)
                     ▼
 ══════════════════════════════════════════════════════════════════
                     RUNTIME  (deterministic path — no LLM decides)
