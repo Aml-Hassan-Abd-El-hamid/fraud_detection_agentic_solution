@@ -17,7 +17,7 @@ are a human sign-off and a saved history of rulebooks, not a different design.
 ```
 BUILD (make the engine)  - primary: AI writes the rulebook (data), a template writes the code
   task.txt  (the written policy, in words)
-      |   Gemma 4 31B  - the AI turns the words into a rulebook (DSL)
+      |   Gemma 4 31B  - the AI turns the words into a rulebook
       v
   policy.dsl.json  (the rulebook, as plain data)
       |   a small template  - plain code turns the data into code (no AI)
@@ -41,19 +41,19 @@ RUN (handle the events)
   output/decisions.json  + a short report
 ```
 
-**Three ways to build the engine** — the primary path is the middle one (`--llm`, AI writes the
-DSL, a template writes the code). The third is an experiment (see "What I would do differently"):
+**Three ways to build the engine** — the primary path is the middle one (`--llm`: the AI writes the
+rulebook, a template writes the code). The third is an experiment (see "What I would do differently"):
 
-| Command | Who writes the code | Absorbs new rule *shapes*? | Safety |
+| Command | Who writes the code | Handles a brand-new rule? | Safety |
 |---|---|---|---|
-| `policy_compiler.py` | template | ❌ values only | deterministic |
-| `policy_compiler.py --llm` | **AI writes DSL, template writes code** | ❌ values only | **low risk (AI writes data)** |
-| `policy_compiler.py --llm-code` | AI writes `policy.py` directly | ✅ any shape | AST guard + tests + restore (experimental) |
+| `policy_compiler.py` | a template | ❌ only value changes | fixed, same every time |
+| `policy_compiler.py --llm` | **AI writes the rulebook, template writes code** | ❌ only value changes | **low risk (AI writes data, not code)** |
+| `policy_compiler.py --llm-code` | AI writes `policy.py` directly | ✅ any new rule | safety scan + tests + auto-restore (experiment) |
 
-Primary = **`--llm`**: the AI only writes the DSL (reviewable data), and a deterministic template
-turns it into the code — so the code always faithfully matches the reviewed rulebook. The `--llm-code`
-mode (AI writes the code directly) is an experiment; frontier models kept missing edge cases, so
-the guardrail rejected those builds and the deterministic engine ships.
+Primary = **`--llm`**: the AI only writes the rulebook (data you can read and check), and a plain
+template turns it into the code — so the code always matches the rulebook you approved. The
+`--llm-code` mode (AI writes the code itself) is an experiment; the AI models kept missing an edge
+case, so the checks rejected those builds and the fixed engine ships.
 
 Not built yet (these are the production extras): no human sign-off before a new rulebook goes
 live (the tests are the only gate), no saved history of old rulebooks (just one file), and the
@@ -61,123 +61,48 @@ messages are fixed templates instead of AI-written.
 
 ### Target design (production)
 
-The full picture. Build time adds a human approval and a saved history of every rulebook; run
-time adds an AI that writes the customer and staff messages.
-
-Two phases. **Build time**: an LLM compiles the written policy into a DSL/config (and, optionally,
-the engine code directly) plus tests; an AST guard + tests gate it and a human approves before it
-ships. **Runtime**: a fully deterministic path gathers evidence and decides; an LLM only writes the
-message prose at the end.
+The full picture: the same idea as above, plus three things a real 24/7 system needs — a person
+signs off on a new rulebook, every version is saved so you can roll back, and an AI writes the
+customer and staff messages at run time.
 
 ```
-                         ┌──────────────────────┐
-                         │   Policy Owner       │
-                         │  ops_policy.md       │
-                         │  + expected examples │
-                         └──────────┬───────────┘
-                                    ▼
-                         ┌──────────────────────┐
-                         │   Policy Compiler    │  ◄── LLM (build time, offline)
-                         │        LLM           │
-                         │ NL Policy → DSL/config│
-                         │  → guarded engine code│
-                         │ + generate test cases │
-                         └──────────┬───────────┘
-                                    ▼
-                         ┌──────────────────────┐
-                         │   Policy Validation  │
-                         │ Golden + Regression   │
-                         │ Edge cases            │
-                         │ Precedence checks     │
-                         │ Invariants (safety)   │
-                         │ AST guard (gen code)  │
-                         └──────────┬───────────┘
-                              PASS  │  FAIL
-                    ┌───────────────┴────────────┐
-                    ▼                            ▼
-             Human Approval                   Reject
-                    │
-                    ▼
-             ┌──────────────┐
-             │ Policy Store │
-             │ Versioned    │
-             └──────┬───────┘
-                    │ active policy (DSL/config or guarded engine code)
-                    ▼
-══════════════════════════════════════════════════════════════════
-                    RUNTIME  (deterministic path — no LLM decides)
-══════════════════════════════════════════════════════════════════
+BUILD (make the rulebook)  - a person owns the rules; the AI helps; checks + a person approve
+  ops_policy.md  (the written rules + example answers)
+      |   the AI reads the rules
+      v
+  rulebook (data)  - and, if you want, the AI can write the decision code too
+      |   automatic checks: known-answer tests, re-checks of old cases, tricky edge
+      |   cases, rule-order checks, safety rules, and a scan of any AI-written code
+      v
+  a person approves    ->  pass: save it with a version number (so you can roll back)
+                           fail: reject, keep the last good rulebook
 
- events.json
-     │
-     ▼
-┌───────────────┐
-│ Event Ingestor│
-└───────┬───────┘
-        ▼
-┌───────────────────────────────┐
-│ Evidence Gatherer             │  ◄── DETERMINISTIC router (no LLM)
-│ event identifiers → tool set  │      the event CANNOT shrink this set
-│ (mandatory: sanctions +       │      missing required record → R13 fail-closed
-│  customer/ledger/agent)       │
-└──────────┬────────────────────┘
-           │ mandatory tool calls
-           ▼
- ┌──────────────────────────────────────────┐
- │              Tool Layer                   │
- │ lookup_customer()   check_sanctions()     │
- │ lookup_transaction()  lookup_agent()      │
- │ lookup_recent_transfers()  get_policy()   │
- └───────────────────┬──────────────────────┘
-                     ▼
-          ┌─────────────────────┐
-          │ Systems of Record   │
-          │ customers.csv       │
-          │ ledger.csv          │
-          │ agents.csv          │
-          │ sanctions.csv       │
-          └──────────┬──────────┘
-                     │ complete evidence (facts)
-                     ▼
-          ┌─────────────────────┐
-          │ Deterministic       │  ◄── decides. same input → same output
-          │ Policy Engine       │
-          │ Active Policy DSL   │
-          │ R11→R1→R13→R12→R9→   │
-          │ R2→R10→ …           │
-          │ no match → FAIL-CLOSED (ESCALATE)
-          └──────────┬──────────┘
-                     ▼
-              ┌──────────────┐
-              │ Decision     │
-              │ AUTO_*       │
-              │ ESCALATE_*   │
-              └──────┬───────┘
-                     ▼
-          ┌─────────────────────┐
-          │ Response Generator  │  ◄── LLM (runtime, narrator ONLY)
-          │       LLM           │      writes words, never the verdict
-          │ customer_message    │
-          │ internal_case_note  │
-          └──────────┬──────────┘
-                     ▼
-          ┌─────────────────────┐
-          │ Output Validator    │  ◄── hard gate
-          │ JSON Schema         │      + safety: no false success,
-          │ Safety checks       │        no "sanctions" leak, enum only
-          └──────────┬──────────┘
-                     ▼
-              decisions.json
+RUN (handle each event)  - fixed rules decide; the AI never decides
+  events.json
+      v
+  gather evidence   - always look up customer / ledger / agent / sanctions
+                      (the event can't skip a lookup; a missing record -> send to a person)
+      v
+  decide            - fixed rules in a set order; same input -> same answer
+                      (no rule fits -> send to a person, never auto-act)
+      v
+  write message     - the AI writes the wording only, never the decision
+      v
+  final safety check- right shape; never a false "success"; never say "sanctions"
+                      to a customer; only allowed decisions
+      v
+  decisions.json
 ```
 
-- **Evidence Gatherer** is a deterministic router: identifiers present → mandatory tool set.
-  The event can never shrink it (e.g. sanctions always runs when a customer is present).
-- **Policy engine** decides from complete evidence. Deterministic = auditable. No match → fail-closed escalate.
-- **LLM lives in exactly 2 safe places:** Policy Compiler (build time, behind tests + human
-  approval) and Response Generator (runtime, prose only, output-validated). Nothing that touches
-  the decision is an LLM.
+- **Gather evidence** always runs the needed lookups; the event can't shrink the set (the
+  sanctions check always runs when there's a customer).
+- **Decide** works only from the full evidence, the same way every time; anything the rules don't
+  clearly cover goes to a person.
+- The **AI is used in only two safe spots**: writing the rulebook at build time (behind the checks
+  and a person) and writing the message wording at run time (behind the final safety check). It
+  never makes the decision.
 
-Rule precedence (first match wins): **R11 → R1 → R13 → R12 → R9 → R2 → R10 → rest.**
+The rules are checked in a fixed order, strictest first (sanctions and fraud blocks before the rest).
 
 ## Design choices
 
@@ -200,13 +125,13 @@ Rule precedence (first match wins): **R11 → R1 → R13 → R12 → R9 → R2 �
 - [x] **Step 1 — Load data** (`load_data`): read 5 files into memory once.
 - [x] **Step 2 — Tools**: `lookup_customer`, `lookup_transaction`, `lookup_recent_transfers`,
   `lookup_agent`, `check_sanctions`, `get_policy`. Each records itself in `tools_used`.
-- [x] **Step 3 — Policy engine** (`decide`): rules `_r1`–`_r13` in precedence order (in `policy.py`).
+- [x] **Step 3 — Decision rules** (`decide`): rules `_r1`–`_r13` checked in a set order (in `policy.py`).
 - [x] **Step 4 — Messages**: `build_customer_message` (no jargon), `build_internal_case_note` (rule IDs + next action).
-- [x] **Step 5 — Output**: build object, validate schema, write `output/decisions.json`.
+- [x] **Step 5 — Output**: build the decision, check its shape, write `output/decisions.json`.
 - [x] **Step 6 — Check traps** (below) — all 19 pinned by `tests/test_agent.py`.
 - [x] **Step 7 — Report**: counts by decision + AUTO_BLOCK ids.
-- [x] **Step 8 — Policy Compiler**: DSL → `policy.py` (deterministic) + optional LLM stage (NL → DSL) with a test-driven retry loop.
-- [ ] **Step 9 — LLM narrator**: optional Gemini-flash/Gemma message writer, output-validated.
+- [x] **Step 8 — Rulebook builder**: rulebook → `policy.py` (plain template) + optional AI stage (rules → rulebook) that retries until the tests pass.
+- [ ] **Step 9 — AI message writer**: optional Gemini/Gemma writer for the messages, checked before it ships.
 
 ## Traps to verify
 
@@ -227,8 +152,8 @@ Four commands, run from the project folder:
 ```
 python src/agent.py                       # 1. run it: writes output/decisions.json + a summary
 python tests/test_agent.py                # 2. check it: 19 known cases + safety rules (no extra install)
-python src/policy_compiler.py             # 3. rebuild the deterministic engine from the saved rulebook
-python src/policy_compiler.py --llm       # 4. PRIMARY build: AI writes the DSL; a template writes the code
+python src/policy_compiler.py             # 3. rebuild the fixed engine from the saved rulebook
+python src/policy_compiler.py --llm       # 4. PRIMARY build: AI writes the rulebook; a template writes the code
 ```
 
 What you should see:
@@ -237,7 +162,7 @@ What you should see:
 - **2** prints `8/8 passed`.
 - **3** prints `rendered src/policy.py from DSL` then `8/8 passed` (no AI, offline).
 - **4 (primary)** needs `GOOGLE_API_KEY` in `.env` and `pip install google-genai`. The AI writes the
-  DSL, a template turns it into `policy.py`, and the tests grade it; if it can't pass, the last good
+  rulebook, a template turns it into `policy.py`, and the tests grade it; if it can't pass, the last good
   engine is restored. (`--llm-code`, the AI-writes-code experiment, also exists — see below.)
 - Then open `output/decisions.json` and read the trap rows (E002, E009, E015, E018) to see the
   right calls in plain sight.
@@ -250,10 +175,10 @@ Files: `src/policy.dsl.json` (the rulebook, as data), `src/policy.py` (the decid
 
 The current build is the 5-hour version. To reach the production design above I would:
 
-- **Let the AI write the `decide` code directly** (the `--llm-code` experiment), not just the DSL,
-  so a brand-new rule *shape* needs no template change — kept safe by the AST guard + tests + restore.
-  In live runs frontier models kept missing an edge case, so I'd invest in better prompting/examples
-  and a hardened sandbox before trusting it.
+- **Let the AI write the `decide` code directly** (the `--llm-code` experiment), not just the
+  rulebook, so a brand-new rule needs no template change — kept safe by the code safety scan +
+  tests + auto-restore. In live runs the AI models kept missing an edge case, so I'd invest in
+  better prompting/examples and a stronger sandbox before trusting it.
 - **Add a human sign-off** before a new rulebook goes live. Today the tests are the only gate;
   production should also have a person approve the change.
 - **Keep a history of rulebooks** so we can roll back to yesterday's version in seconds. Today
@@ -270,7 +195,7 @@ The current build is the 5-hour version. To reach the production design above I 
 
 - **Why not n8n:** no prior n8n experience + a setup problem (Node version clash) would have
   eaten the time budget. The task allows Python if I explain why, so I used plain Python.
-- **AI assistance:** GitHub Copilot helped write the plan and code; Gemma 4 31B writes the decide
-  engine from the written policy (guarded by an AST check + the tests).
+- **AI assistance:** GitHub Copilot helped write the plan and code; Gemma 4 31B turns the written
+  rules into the rulebook (checked by the tests).
 - **Not done:** no AI writing the messages yet (fixed templates), no human sign-off step, no
   saved rulebook history, no real bank connection. All are in "what I would do differently".
